@@ -7,11 +7,9 @@ import com.mrli.service.ProjectInfoService;
 import com.mrli.utils.Msg;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -77,9 +75,54 @@ public class ProjectInfoController {
 		}else {
 			return Msg.fail().add("validate_msg","× 不可用");
 		}
-
 	}
 
+	/**
+	 * @title deleteProjectInfoById
+	 * @author Kevin
+	 * @updateTime 2022-06-18 17:25
+	 * 根据传递的参数进行业务层调用
+	 * 单个 ： 5
+	 * 多个 ： 5-6-7
+	 */
+	@RequestMapping(value = "/projectInfo/{ids}",method = RequestMethod.DELETE)
+	@ResponseBody
+	public Msg deleteProjectInfoById(@PathVariable("ids")String ids){
+		//判断有没有"-"
+		if(ids.contains("-")){//多个删除
+			//存放数字的集合
+			List<Integer> int_ids = new ArrayList<>();
+			//根据-拆分传进来的数据
+			String[] str_ids = ids.split("-");
+			//循环将拆分的字符串转化为数字,放到集合中
+			for (String str_id:str_ids) {
+				int_ids.add(Integer.valueOf(str_id));
+			}
+			//调用多个删除的业务方法
+			projectInfoService.deleteProjectInfosAny(int_ids);
+		}else {//单个删除
+			//将字符串转化为数字
+			Integer id = Integer.valueOf(ids);
+			//调用单个删除业务方法
+			projectInfoService.deleteProjectInfo(id);
+		}
+		return Msg.success();
+	}
 
+	//根据id主键两表联查单个数据
+	@RequestMapping(value = "/projectInfo/{id}",method = RequestMethod.GET)
+	@ResponseBody
+	public Msg getProjectInfo(@PathVariable("id") Integer pi_Id){
+		//查询得到ProjectInfo对象
+		ProjectInfo projectInfo = projectInfoService.getProjectInfo(pi_Id);
+		return Msg.success().add("projectInfo",projectInfo);
+	}
 
+	//根据id修改数据
+	@RequestMapping(value = "/projectInfo/{piId}",method = RequestMethod.PUT)
+	@ResponseBody
+	public Msg updateProjectInfo(ProjectInfo projectInfo){
+		projectInfoService.updateProjectInfo(projectInfo);
+		return Msg.success();
+	}
 }

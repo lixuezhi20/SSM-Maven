@@ -43,11 +43,29 @@ public class ProjectInfoService {
 	}
 
 	//查询单个项目(两表联查)
+	public ProjectInfo getProjectInfo(Integer pi_Id){
+		return projectInfoMapper.selectByPrimaryKeyWithApplicant(pi_Id);
+	}
 
 	//修改项目
+	public void updateProjectInfo(ProjectInfo projectInfo){
+		projectInfoMapper.updateByPrimaryKeySelective(projectInfo);
+	}
 
 	//删除单个项目
+	public void deleteProjectInfo(Integer id){
+		projectInfoMapper.deleteByPrimaryKey(id);
+	}
 
 	//批量删除项目
-
+	public void deleteProjectInfosAny(List<Integer> ids){
+		//创建删除对象
+		ProjectInfoExample example = new ProjectInfoExample();
+		//得到删除对象的条件
+		ProjectInfoExample.Criteria criteria = example.createCriteria();
+		//将参数放到条件中
+		criteria.andPiIdIn(ids);
+		//根据条件删除
+		projectInfoMapper.deleteByExample(example);
+	}
 }

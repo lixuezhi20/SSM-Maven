@@ -25,6 +25,72 @@
 
 </head>
 <body>
+<%--用于修改弹出的模态框--%>
+<div class="modal fade" id="projectInfoUpdateModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"><div class="modal-dialog" role="document">
+    <div class="modal-content">
+        <%-- 头部--%>
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="myModalLabelupdate">项目申报</h4>
+        </div>
+        <%-- 中间的内容--%>
+        <div class="modal-body">
+            <%-- 表单效果--%>
+            <form class="form-horizontal">
+                <%-- 项目名 --%>
+                <div class="form-group">
+                    <label for="projectName_update_static" class="col-sm-2 control-label">ProjectName</label>
+                    <div class="col-sm-10">
+                    <p class="form-control-static" id="projectName_update_static"></p>
+                    </div>
+                </div>
+                <%-- 项目起始时间--%>
+                <div class="form-group">
+                    <label for="startDate_update_input" class="col-sm-2 control-label">startDate</label>
+                    <div class="col-sm-10">
+                        <input type="date" name="piStartdate" class="form-control" id="startDate_update_input" placeholder="起始时间">
+                    </div>
+                </div>
+                <%-- 项目结束时间--%>
+                <div class="form-group">
+                    <label for="endDate_update_input" class="col-sm-2 control-label">EndDate</label>
+                    <div class="col-sm-10">
+                        <input type="date" name="piEnddate" class="form-control" id="endDate_update_input" placeholder="结束时间">
+                    </div>
+                </div>
+                <%-- 申报状态--%>
+                <div class="form-group">
+                    <label class="col-sm-2 control-label">Status</label>
+                    <div class="col-sm-10">
+                        <select class="form-control" name="piStatus">
+                            <option value="0">已申报</option>
+                            <option value="1">审核中</option>
+                            <option value="2">未申报</option>
+                        </select>
+                    </div>
+                </div>
+                <%-- 申报人--%>
+                <div class="form-group">
+                    <label class="col-sm-2 control-label">Applicant</label>
+                    <div class="col-sm-10">
+                        <select class="form-control" name="acid">
+                        
+                        </select>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <%-- 底部--%>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+            <button type="button" class="btn btn-primary" id="projectInfo_update_btn">更新</button>
+        </div>
+    </div>
+</div>
+</div>
+
+
+
 <%--用于添加的弹框--%>
 <div class="modal fade" id="projectInfoAddModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"><div class="modal-dialog" role="document">
     <div class="modal-content">
@@ -39,7 +105,7 @@
             <form class="form-horizontal">
                 <%-- 项目名 --%>
                 <div class="form-group">
-                    <label for="projectName_add_input" class="col-sm-2 control-label">Email</label>
+                    <label for="projectName_add_input" class="col-sm-2 control-label">ProjectName</label>
                     <div class="col-sm-10">
                         <input type="text" name="piProjectname" class="form-control" id="projectName_add_input" placeholder="项目名">
                         <%-- 用来显示错误信息的span标签 --%>
@@ -186,7 +252,7 @@
         // 循环遍历展示集合中的数据 projectInfos:遍历的集合 index:下标 item:集合中的每一项
         $.each(projectInfos, function (index, item) {
             // 复选框
-            var checkBoxTd=$("<td> <input type='checkbox' id='check_item'> </td>");
+            var checkBoxTd=$("<td> <input type='checkbox' class='check_item'> </td>");
             // 编号格子
             var piIdTd = $("<td></td>").append(item.piId);
             // 项目名格子
@@ -216,9 +282,15 @@
             var editBtn = $("<button></button>").addClass("btn btn-primary btn-sm edit_btn")
                     .append("<span></span>").addClass("glyphicon glyphicon-pencil").append("编辑");
             
+            //为编辑按钮添加一个自定义的属性,标识当前操作项的id
+            editBtn.attr("edit-id",item.piId);
+            
             // 删除按钮 <button type="button" class="btn btn-danger">（危险）Danger</button>
             var delBtn = $("<button></button>").addClass("btn btn-danger btn-sm delete_btn")
                     .append("<span></span>").addClass("glyphicon glyphicon-trash").append("删除");
+            
+            //为删除按钮添加一个自定义的属性，标识当前操作项(删除)的id
+            delBtn.attr("del-id", item.piId);
         
             //将编辑和删除按钮放在一个格子
             var btnTd = $("<td></td>").append(editBtn).append(" ").append(delBtn);
@@ -491,5 +563,120 @@
         $(ele).next("span").text(msg);
     }
     
+    //全选&全不选
+    $("#check_all").click(function (){
+        //将父级的按钮的选择状态同步设置给子级按钮
+        $(".check_item").prop("checked",$(this).prop("checked"));
+    });
+    
+    //子级全选,父级也选中
+    $(document).on("click",".check_item",function (){
+        //子级选中的长度个数 是否 等于子级的个数 ; 如果相等,结果为true(勾选)
+        var flag = $(".check_item:checked").length == $(".check_item").length
+        //将结果同步给父级
+        $("#check_all").prop("checked", flag);
+    });
+    
+    //单个删除按钮的动态绑定点击事件
+    $(document).on("click",".delete_btn",function (){
+       //获取要删除的项目名字
+       var projectInfoName = $(this).parents("tr").find("td:eq(2)").text();
+       //获取需要删除的id，删除按钮上
+        var delId = $(this).attr("del-id");
+        //询问
+        if (confirm("确定删除"+projectInfoName+"吗？"+delId)){
+          //发送Ajax请求删除单个数据
+          $.ajax({
+              url:"${app_path}/projectInfo/"+delId,
+              type:"DELETE",
+              success:function (result){
+                  //成功跳转当前页面
+                  to_page(currentPage);
+              }
+          });
+        }
+    });
+    
+    //删除选择的项
+    $("#projectInfo_delete_all_btn").click(function (){
+       //创建存放项目名的变量
+       var projectInfoNames="";
+       //创建存放删除id的变量
+        var del_ids="";
+        //循环遍历,把所有勾选的项里面的名称和id取出来拼接到对应变量中
+        $.each($(".check_item:checked"),function (){
+            //将遍历的项目名拼接到projectName中,并用","隔开
+            projectInfoNames+=$(this).parents("tr").find("td:eq(2)").text()+",";
+            //将遍历的id拼接到del_ids中,并用"-"隔开
+            del_ids +=$(this).parents("tr").find("td:eq(1)").text()+"-";
+        });
+        //去掉最后的","
+        projectInfoNames=projectInfoNames.substring(0,projectInfoNames.length-1);
+        //去掉最后的"-"
+        del_ids=del_ids.substring(0,del_ids.length-1);
+        //判断
+        if (confirm("确定删除"+projectInfoNames+"吗？")){
+            //发送Ajax请求删除单个数据
+            $.ajax({
+                url:"${app_path}/projectInfo/"+del_ids,
+                type:"DELETE",
+                success:function (result){
+                    //成功跳转当前页面
+                    to_page(currentPage);
+                }
+            });
+        }
+        
+    });
+    
+    $(document).on("click",".edit_btn",function (){
+        //1.查询当前的这条数据
+        getProjectInfo($(this).attr("edit-id"));
+        //2.查询申报人
+        getApplicants("#projectInfoUpdateModal select[name=acid]");
+        
+        //3.将需要修改的id传输模态框
+        $("#projectInfo_update_btn").attr("edit-id",$(this).attr("edit-id"));
+        
+        //弹出模态框
+        $("#projectInfoUpdateModal").modal({
+            backdrop: 'static'
+        });
+        
+    });
 
+    //查询单个数据
+    function getProjectInfo(id) {
+        $.ajax({
+            url:"${app_path}/projectInfo/"+id,
+            type:"GET",
+            success:function (result){
+                console.log(result);
+                //取出员工对象
+                var projectInfo = result.extend.projectInfo;
+                //将项目中的信息展示显示到模态框上
+                $("#projectName_update_static").text(projectInfo.piProjectname);
+                $("#startDate_update_input").val(dateFarmat("yyyy-MM-dd",new Date(projectInfo.piStartdate)));
+                $("#endDate_update_input").val(dateFarmat("yyyy-MM-dd",new Date(projectInfo.piEnddate)));
+                $("#projectInfoUpdateModal select[name=piStatus]").val([parseInt(projectInfo.piStatus)]);
+                $("#projectInfoUpdateModal select[name=acid]").val([parseInt(projectInfo.acid)]);
+                
+            }
+        });
+    }
+    
+    //点击修改进行保存操作
+    $("#projectInfo_update_btn").click(function (){
+       $.ajax({
+           url:"${app_path}/projectInfo/"+$(this).attr("edit-id"),
+           type:"PUT",
+           data:$("#projectInfoUpdateModal form").serialize(),
+           success:function (result){
+               //隐藏
+               $("#projectInfoUpdateModal").modal("hide");
+               //跳转当前页面
+               to_page(currentPage);
+           }
+       })
+    });
 </script>
